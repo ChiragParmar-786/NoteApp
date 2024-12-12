@@ -1,4 +1,4 @@
-package com.secure.Notes;
+package com.secure.Notes.Model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

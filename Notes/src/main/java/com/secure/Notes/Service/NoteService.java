@@ -1,10 +1,12 @@
-package com.secure.Notes;
+package com.secure.Notes.Service;
+
+import com.secure.Notes.Model.Note;
 
 import java.util.List;
 
 public interface NoteService {
 
-    Note createNoteForUser(String username,String content);
+    Note createNoteForUser(String username, String content);
 
     Note updateNoteForUSer(Long noteId, String content,String username);
 

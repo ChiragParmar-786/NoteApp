@@ -9,7 +9,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+
+import javax.sql.DataSource;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -27,8 +30,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService(){
-        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
+    public UserDetailsService userDetailsService(DataSource dataSource){
+        JdbcUserDetailsManager manager = new JdbcUserDetailsManager(dataSource);
         //passwords are not stored in encrypted format due to {noop}
         if(!manager.userExists("user1")){
             manager.createUser(

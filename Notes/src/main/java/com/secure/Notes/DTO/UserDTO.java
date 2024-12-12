@@ -1,82 +1,46 @@
-package com.secure.Notes.Model;
+package com.secure.Notes.DTO;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import com.secure.Notes.Model.Role;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "Users",
-        uniqueConstraints = {
-        @UniqueConstraint(columnNames = "username"),
-        @UniqueConstraint(columnNames = "email")
-        })
-public class User {
-
-    @Id
-    @GeneratedValue
-    @Column(name = "user_id")
+public class UserDTO {
     private Long userId;
-
-    @NotBlank
-    @Size(max = 20)
-    @Column(name = "username")
     private String userName;
-
-    @NotBlank
-    @Size(max = 50)
-    @Email
-    @Column(name = "email")
     private String email;
-
-    @Size(max = 120)
-    @Column(name = "password")
-    @JsonIgnore
-    private String password;
-
-    private boolean accountNonLocked = true;
-    private boolean accountNonExpired = true;
-    private boolean credentialsNonExpired = true;
-    private boolean enabled = true;
-
+    private boolean accountNonLocked;
+    private boolean accountNonExpired;
+    private boolean credentialsNonExpired;
+    private boolean enabled;
     private LocalDate credentialsExpiryDate;
     private LocalDate accountExpiryDate;
-
     private String twoFactorSecret;
-    private boolean isTwoFactorEnabled = false;
+    private boolean isTwoFactorEnabled;
     private String signUpMethod;
-
-    @JsonBackReference
-    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE})
-    @JoinColumn(name = "role_id",referencedColumnName = "role_id")
     private Role role;
-
-    @CreationTimestamp
-    @Column(updatable = false)
     private LocalDateTime createdDate;
-
-    @UpdateTimestamp
     private LocalDateTime updatedDate;
 
-    public User() {
+    public UserDTO() {
     }
 
-    public User(String userName, String email, String password) {
+    public UserDTO(Long userId, String userName, String email, boolean accountNonLocked, boolean accountNonExpired, boolean credentialsNonExpired, boolean enabled, LocalDate credentialsExpiryDate, LocalDate accountExpiryDate, String twoFactorSecret, boolean isTwoFactorEnabled, String signUpMethod, Role role, LocalDateTime createdDate, LocalDateTime updatedDate) {
+        this.userId = userId;
         this.userName = userName;
         this.email = email;
-        this.password = password;
-    }
-
-    public User(String userName, String email) {
-        this.userName = userName;
-        this.email = email;
+        this.accountNonLocked = accountNonLocked;
+        this.accountNonExpired = accountNonExpired;
+        this.credentialsNonExpired = credentialsNonExpired;
+        this.enabled = enabled;
+        this.credentialsExpiryDate = credentialsExpiryDate;
+        this.accountExpiryDate = accountExpiryDate;
+        this.twoFactorSecret = twoFactorSecret;
+        this.isTwoFactorEnabled = isTwoFactorEnabled;
+        this.signUpMethod = signUpMethod;
+        this.role = role;
+        this.createdDate = createdDate;
+        this.updatedDate = updatedDate;
     }
 
     public Long getUserId() {
@@ -101,14 +65,6 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public boolean isAccountNonLocked() {
@@ -205,17 +161,5 @@ public class User {
 
     public void setUpdatedDate(LocalDateTime updatedDate) {
         this.updatedDate = updatedDate;
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if(this==obj) return true;
-        if(!(obj instanceof User)) return false;
-        return userId != null && userId.equals(((User)obj).getUserId());
     }
 }

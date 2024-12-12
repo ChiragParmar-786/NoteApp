@@ -11,11 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-
-import javax.sql.DataSource;
 
 import java.time.LocalDate;
 
@@ -50,8 +46,8 @@ public class SecurityConfig {
                         user1.setAccountNonLocked(false);
                         user1.setAccountNonExpired(true);
                         user1.setCredentialsNonExpired(true);
-                        user1.setEnable(true);
-                        user1.setCredentialExpiryDate(LocalDate.now().plusYears(1));
+                        user1.setEnabled(true);
+                        user1.setCredentialsExpiryDate(LocalDate.now().plusYears(1));
                         user1.setAccountExpiryDate(LocalDate.now().plusYears(1));
                         user1.setTwoFactorEnabled(false);
                         user1.setSignUpMethod("email");
@@ -64,8 +60,8 @@ public class SecurityConfig {
                 admin.setAccountNonLocked(true);
                 admin.setAccountNonExpired(true);
                 admin.setCredentialsNonExpired(true);
-                admin.setEnable(true);
-                admin.setCredentialExpiryDate(LocalDate.now().plusYears(1));
+                admin.setEnabled(true);
+                admin.setCredentialsExpiryDate(LocalDate.now().plusYears(1));
                 admin.setAccountExpiryDate(LocalDate.now().plusYears(1));
                 admin.setTwoFactorEnabled(false);
                 admin.setSignUpMethod("email");

@@ -4,12 +4,14 @@ import com.secure.Notes.DTO.UserDTO;
 import com.secure.Notes.Service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/")
+//@PreAuthorize("hasRole('ROLE_ADMIN')") method level security
 public class AdminController {
 
     UserService userService;
@@ -18,6 +20,7 @@ public class AdminController {
         this.userService = userService;
     }
 
+   // @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/users")
     public ResponseEntity<List<UserDTO>> getAllUsers()
     {

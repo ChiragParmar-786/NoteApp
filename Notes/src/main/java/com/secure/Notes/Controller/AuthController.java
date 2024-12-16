@@ -10,6 +10,8 @@ import com.secure.Notes.Security.SignIn.LoginRequest;
 import com.secure.Notes.Security.SignIn.LoginResponse;
 import com.secure.Notes.Security.SignUP.MessageResponse;
 import com.secure.Notes.Security.SignUP.SignupRequest;
+import com.secure.Notes.Security.SignUP.UserInfoResponse;
+import com.secure.Notes.Service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,13 +20,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -34,7 +34,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/public")
+@RequestMapping("/api")
 public class AuthController {
 
     AuthenticationManager authenticationManager;
@@ -47,15 +47,18 @@ public class AuthController {
 
     PasswordEncoder encoder;
 
-    public AuthController(AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder encoder) {
+    UserService userService;
+
+    public AuthController(AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder encoder, UserService userService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.encoder = encoder;
+        this.userService = userService;
     }
 
-    @PostMapping("/signin")
+    @PostMapping("/public/signin")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest){
         Authentication authentication;
         try{
@@ -87,7 +90,7 @@ public class AuthController {
     }
 
 
-    @PostMapping("/signup")
+    @PostMapping("/public/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signupRequest){
         if(userRepository.existsByUserName(signupRequest.getUsername())){
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken"));
@@ -132,4 +135,35 @@ public class AuthController {
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!!"));
     }
+
+    @GetMapping("/user")
+    public ResponseEntity<?> getUserDetails(@AuthenticationPrincipal UserDetails userDetails){
+        User user = userService.findByUserName(userDetails.getUsername());
+
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+
+        UserInfoResponse response = new UserInfoResponse(
+                user.getUserId(),
+                user.getUserName(),
+                user.getEmail(),
+                user.isAccountNonLocked(),
+                user.isAccountNonExpired(),
+                user.isCredentialsNonExpired(),
+                user.isEnabled(),
+                user.getCredentialsExpiryDate(),
+                user.getAccountExpiryDate(),
+                user.isTwoFactorEnabled(),
+                roles
+                );
+
+        return ResponseEntity.ok().body(response);
+    }
+
+    @GetMapping("/username")
+    public ResponseEntity<String> getUserName(@AuthenticationPrincipal UserDetails userDetails){
+        return ResponseEntity.ok().body(userDetails.getUsername());
+    }
+
 }

@@ -1,8 +1,16 @@
 package com.secure.Notes.Controller;
 
+import com.secure.Notes.Model.AppRole;
+import com.secure.Notes.Model.Role;
+import com.secure.Notes.Model.User;
+import com.secure.Notes.Repository.RoleRepository;
+import com.secure.Notes.Repository.UserRepository;
 import com.secure.Notes.Security.JWT.JwtUtils;
 import com.secure.Notes.Security.SignIn.LoginRequest;
 import com.secure.Notes.Security.SignIn.LoginResponse;
+import com.secure.Notes.Security.SignUP.MessageResponse;
+import com.secure.Notes.Security.SignUP.SignupRequest;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,14 +20,17 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -30,9 +41,18 @@ public class AuthController {
 
     JwtUtils jwtUtils;
 
-    public AuthController(AuthenticationManager authenticationManager,JwtUtils jwtUtils) {
+    UserRepository userRepository;
+
+    RoleRepository roleRepository;
+
+    PasswordEncoder encoder;
+
+    public AuthController(AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder encoder) {
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.encoder = encoder;
     }
 
     @PostMapping("/signin")
@@ -64,5 +84,52 @@ public class AuthController {
 
         return ResponseEntity.ok(response);
 
+    }
+
+
+    @PostMapping("/signup")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signupRequest){
+        if(userRepository.existsByUserName(signupRequest.getUsername())){
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken"));
+        }
+
+        if(userRepository.existsByEmail(signupRequest.getEmail())){
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already taken"));
+        }
+
+        User user = new User(signupRequest.getUsername(),
+                signupRequest.getEmail(),
+               encoder.encode(signupRequest.getPassword()));
+
+        Set<String> strRoles = signupRequest.getRole();
+
+        Role role;
+
+        if(strRoles == null || strRoles.isEmpty()){
+            role = roleRepository.findByRoleName(AppRole.ROLE_USER).
+                    orElseThrow(()->new RuntimeException("Error: Role is not found"));
+        } else{
+            String roleStr = strRoles.iterator().next();
+            if(roleStr.equals("admin")){
+               role = roleRepository.findByRoleName(AppRole.ROLE_ADMIN).
+                       orElseThrow(()->new RuntimeException("Error: Role is not found"));
+            } else {
+                role = roleRepository.findByRoleName(AppRole.ROLE_USER).
+                        orElseThrow(()->new RuntimeException("Error: Role is not found"));
+            }
+        }
+
+        user.setAccountNonLocked(true);
+        user.setAccountNonExpired(true);
+        user.setCredentialsNonExpired(true);
+        user.setEnabled(true);
+        user.setCredentialsExpiryDate(LocalDate.now().plusYears(1));
+        user.setAccountExpiryDate(LocalDate.now().plusYears(1));
+        user.setTwoFactorEnabled(false);
+        user.setSignUpMethod("email");
+        user.setRole(role);
+        userRepository.save(user);
+
+        return ResponseEntity.ok(new MessageResponse("User registered successfully!!"));
     }
 }
